@@ -25,6 +25,7 @@ func main() {
 	ed_url := flag.String("url", "", "Eduscope URL")
 	username := flag.String("u", "", "Eduscope User Name")
 	password := flag.String("p", "", "Eduscope Password")
+	high_quality := flag.Bool("high-quality", false, "Downloads video at a higher quality")
 
 	flag.Parse()
 
@@ -121,16 +122,24 @@ func main() {
 		log.Panicln(err)
 	}
 
-	ur.Path = path.Join(u.Path, res.Video_1_360_m3u8)
+	if *high_quality {
+		if len(res.Video_1_720_m3u8) <= 0 {
+			log.Println("High quality is not available")
+		}
+
+		ur.Path = path.Join(u.Path, res.Video_1_720_m3u8)
+		videoName += "-high-quality"
+	} else {
+		ur.Path = path.Join(u.Path, res.Video_1_360_m3u8)
+	}
 
 	if err := DownloadWithFFMPEG(ur.String(), videoName); err != nil {
 		log.Panicln(err)
 	}
-	// log.Println(client.GetString(""))
 }
 
 func DownloadWithFFMPEG(url string, name string) error {
-	cmd := exec.Command("ffmpeg", "-i", url, "-c", "copy", name+".mkv")
+	cmd := exec.Command("ffmpeg", "-y", "-i", url, "-c", "copy", name+".mkv")
 
 	if err := cmd.Start(); err != nil {
 		return err

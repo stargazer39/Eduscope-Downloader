@@ -5,9 +5,9 @@
 
 1. Clone this repo
 2. Install [Go](https://go.dev/)
-3. Install and add ffmepeg to the path. Refer [this guide](https://www.thewindowsclub.com/how-to-install-ffmpeg-on-windows-10)
+3. Install and add ffmpeg to the path. Refer [this guide](https://www.thewindowsclub.com/how-to-install-ffmpeg-on-windows-10)
 4. Open a terminal inside the cloned folder
-5. Run one of below commands :
+5. Run one of below commands (Refer to the useage):
 
 ## With Username & Password
 
@@ -24,3 +24,14 @@ go run . -url "https://lecturecapture.sliit.lk/neplayer.php?id=Vjk1eXF3TG5nSV8zN
 Very ALPHA state as of now. Need ffmepg in the PATH.
 Refer [this guide](https://www.thewindowsclub.com/how-to-install-ffmpeg-on-windows-10) to setup ffmpeg in the PATH
 
+# Useage 
+
+Usage of Eduscope Downloader:
+  -high-quality
+        Downloads video at a higher quality
+  -p string
+        Eduscope Password
+  -u string
+        Eduscope User Name
+  -url string
+        Eduscope URL
