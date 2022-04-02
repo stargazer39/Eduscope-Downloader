@@ -26,6 +26,7 @@ Refer [this guide](https://www.thewindowsclub.com/how-to-install-ffmpeg-on-windo
 
 # Useage 
 
+```
 Usage of Eduscope Downloader:
   -high-quality
         Downloads video at a higher quality
@@ -35,3 +36,4 @@ Usage of Eduscope Downloader:
         Eduscope User Name
   -url string
         Eduscope URL
+```
