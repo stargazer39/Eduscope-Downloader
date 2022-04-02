@@ -7,7 +7,6 @@ import (
 	"net/http"
 	"net/http/cookiejar"
 	"net/url"
-	"time"
 )
 
 type HttpClient struct {
@@ -18,8 +17,7 @@ func NewHttpClient() *HttpClient {
 	jar, _ := cookiejar.New(nil)
 
 	client := &http.Client{
-		Timeout: 30 * time.Second,
-		Jar:     jar,
+		Jar: jar,
 	}
 
 	return &HttpClient{

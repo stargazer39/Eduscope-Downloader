@@ -1,15 +1,20 @@
 package main
 
 import (
+	"bufio"
 	"flag"
+	"io"
 	"log"
+	"net/http"
 	"net/url"
+	"os"
 	"os/exec"
 	"path"
 	"strings"
 
 	"github.com/PuerkitoBio/goquery"
 	"github.com/kennygrant/sanitize"
+	"github.com/pieterclaerhout/go-waitgroup"
 )
 
 type WebServicesResponse struct {
@@ -133,7 +138,9 @@ func main() {
 		ur.Path = path.Join(u.Path, res.Video_1_360_m3u8)
 	}
 
-	if err := DownloadWithFFMPEG(ur.String(), videoName); err != nil {
+	log.Println(ur.String())
+
+	if err := DownloadWithHttp(client.Client, ur.String(), videoName); err != nil {
 		log.Panicln(err)
 	}
 }
@@ -148,6 +155,104 @@ func DownloadWithFFMPEG(url string, name string) error {
 	if err := cmd.Wait(); err != nil {
 		return err
 	}
+
+	return nil
+}
+
+func DownloadWithHttp(client *http.Client, u string, name string) error {
+	resp, err := client.Get(u)
+
+	if err != nil {
+		return err
+	}
+
+	reader := bufio.NewReader(resp.Body)
+	var files []string
+
+	for {
+		line, _, err := reader.ReadLine()
+
+		if err == io.EOF {
+			break
+		}
+
+		if strings.HasSuffix(string(line), ".ts") {
+			files = append(files, string(line))
+		}
+	}
+
+	if _, err := os.Stat(name); os.IsNotExist(err) {
+		if err := os.Mkdir(name, 0644); err != nil {
+			return err
+		}
+	}
+
+	m3u8_path := path.Join(name, "out.m3u8")
+
+	if err := DownloadURLToPath(client, u, m3u8_path); err != nil {
+		log.Panic(err)
+	}
+
+	wg := waitgroup.NewWaitGroup(16)
+
+	for _, f := range files {
+		wg.BlockAdd()
+
+		go func(fName string) {
+			url, _ := url.Parse(u)
+
+			url.Path = path.Join(url.Path, "../"+fName)
+
+			new_url := url.String()
+			new_fPath := path.Join(name, fName)
+
+			if err := DownloadURLToPath(client, new_url, new_fPath); err != nil {
+				log.Panic(err)
+			}
+			wg.Done()
+		}(f)
+
+	}
+
+	wg.Wait()
+
+	// Merge all together
+	cmd := exec.Command("ffmpeg", "-y", "-i", m3u8_path, "-c", "copy", name+".mkv")
+
+	if err := cmd.Start(); err != nil {
+		return err
+	}
+
+	if err := cmd.Wait(); err != nil {
+		return err
+	}
+
+	if err := os.RemoveAll(name); err != nil {
+		log.Println("unable to remove " + name)
+	}
+
+	return nil
+}
+
+func DownloadURLToPath(client *http.Client, url string, output string) error {
+	file_resp, err := client.Get(url)
+
+	if err != nil {
+		return err
+	}
+
+	file, err := os.Create(output)
+
+	if err != nil {
+		return err
+	}
+
+	if _, err := io.CopyBuffer(file, file_resp.Body, nil); err != nil {
+		return err
+	}
+
+	defer file.Close()
+	defer file_resp.Body.Close()
 
 	return nil
 }
