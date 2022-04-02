@@ -227,9 +227,9 @@ func DownloadWithHttp(client *http.Client, u string, name string) error {
 		return err
 	}
 
-	// if err := os.RemoveAll(name); err != nil {
-	// 	log.Println("unable to remove " + name)
-	// }
+	if err := os.RemoveAll(name); err != nil {
+		log.Println("unable to remove " + name)
+	}
 
 	return nil
 }
