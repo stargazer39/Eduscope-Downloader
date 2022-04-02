@@ -227,9 +227,9 @@ func DownloadWithHttp(client *http.Client, u string, name string) error {
 		return err
 	}
 
-	if err := os.RemoveAll(name); err != nil {
-		log.Println("unable to remove " + name)
-	}
+	// if err := os.RemoveAll(name); err != nil {
+	// 	log.Println("unable to remove " + name)
+	// }
 
 	return nil
 }
@@ -241,18 +241,30 @@ func DownloadURLToPath(client *http.Client, url string, output string) error {
 		return err
 	}
 
+	defer file_resp.Body.Close()
+
+	stat, err := os.Stat(output)
+
+	if err != nil {
+		// log.Println(err)
+	} else {
+		if stat.Size() == file_resp.ContentLength {
+			log.Println("File already exist, and Size is match so not downloading. \n" + output)
+			return nil
+		}
+	}
+
 	file, err := os.Create(output)
 
 	if err != nil {
 		return err
 	}
 
+	defer file.Close()
+
 	if _, err := io.CopyBuffer(file, file_resp.Body, nil); err != nil {
 		return err
 	}
-
-	defer file.Close()
-	defer file_resp.Body.Close()
 
 	return nil
 }
