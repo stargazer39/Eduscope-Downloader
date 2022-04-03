@@ -36,7 +36,7 @@ func main() {
 
 	defer func() {
 		fmt.Println("Press any key to exit.")
-		reader.ReadLine()
+		reader.ReadRune()
 	}()
 
 	// Check for ffmpeg
@@ -61,7 +61,8 @@ func main() {
 	u, err := url.Parse(*ed_url)
 
 	if err != nil {
-		log.Panic(err)
+		log.Println(err)
+		return
 	}
 
 	videoId := strings.TrimSpace(u.Query().Get("id"))
@@ -92,7 +93,8 @@ func main() {
 		doc, err := goquery.NewDocumentFromResponse(resp)
 
 		if err != nil {
-			log.Panic(err)
+			log.Println(err)
+			return
 		}
 
 		user := strings.TrimSpace(doc.Find("#dropdown08").Text())
@@ -107,13 +109,15 @@ func main() {
 		resp, rErr := client.Client.Get(*ed_url)
 
 		if rErr != nil {
-			log.Panic(err)
+			log.Println(err)
+			return
 		}
 
 		doc2, err := goquery.NewDocumentFromResponse(resp)
 
 		if err != nil {
-			log.Panic(err)
+			log.Println(err)
+			return
 		}
 
 		title := strings.TrimSpace(doc2.Find("#content-wrapper > div > div.col-md-12 > h2").Text())
@@ -131,13 +135,15 @@ func main() {
 	query.Add("full", "ZnVsbA==")
 
 	if err := client.GetJson("https://lecturecapture.sliit.lk/webservice.php", &res, &query); err != nil {
-		log.Panicln(err)
+		log.Println(err)
+		return
 	}
 
 	ur, err := url.Parse("https://lecturecapture.sliit.lk/webservice.php")
 
 	if err != nil {
-		log.Panicln(err)
+		log.Println(err)
+		return
 	}
 
 	if *high_quality {
@@ -157,7 +163,8 @@ func main() {
 	log.Println("Starting Download...")
 
 	if err := DownloadWithHttp(client.Client, ur.String(), videoName); err != nil {
-		log.Panicln(err)
+		log.Println(err)
+		return
 	}
 }
 

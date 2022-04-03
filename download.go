@@ -10,6 +10,7 @@ import (
 	"os/exec"
 	"path"
 	"strings"
+	"time"
 
 	"github.com/pieterclaerhout/go-waitgroup"
 )
@@ -41,7 +42,13 @@ func DownloadWithHttp(client *http.Client, u string, name string) error {
 	for {
 		line, _, err := reader.ReadLine()
 
-		if err == io.EOF {
+		if err != nil {
+			switch err {
+			case io.EOF:
+				break
+			default:
+				return err
+			}
 			break
 		}
 
@@ -59,7 +66,7 @@ func DownloadWithHttp(client *http.Client, u string, name string) error {
 	m3u8_path := path.Join(name, "out.m3u8")
 
 	if err := DownloadURLToPath(client, u, m3u8_path); err != nil {
-		log.Panic(err)
+		return err
 	}
 
 	wg := waitgroup.NewWaitGroup(16)
@@ -88,8 +95,12 @@ func DownloadWithHttp(client *http.Client, u string, name string) error {
 			new_url := url.String()
 			new_fPath := path.Join(name, fName)
 
+		retry:
 			if err := DownloadURLToPath(client, new_url, new_fPath); err != nil {
-				log.Panic(err)
+				log.Printf("File %s faild to download with Error :\n%v\nRetrying...", fName, err)
+				time.Sleep(time.Second * 5)
+
+				goto retry
 			}
 
 			progress <- 1
