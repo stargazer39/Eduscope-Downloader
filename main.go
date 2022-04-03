@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/url"
 	"os"
+	"os/exec"
 	"path"
 	"strings"
 
@@ -37,6 +38,17 @@ func main() {
 		fmt.Println("Press any key to exit.")
 		reader.ReadLine()
 	}()
+
+	// Check for ffmpeg
+	_, err := exec.LookPath("ffmpeg")
+
+	if err != nil {
+		log.Println(err)
+		log.Println("FFMPEG not found. Put ffmpeg.exe in the current dir or in the PATH")
+		return
+	}
+
+	// log.Printf("FFMEPG found in %s", ffpath)
 
 	if len(*ed_url) <= 0 {
 		InteractiveMode(username, password, ed_url, high_quality, reader)
