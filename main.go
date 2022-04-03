@@ -192,8 +192,13 @@ func InteractiveMode(username *string, password *string, ed_url *string, high_qu
 	fmt.Print("\n--- Use username and password? (y,N)\n--- (That way it will fetch the acctual lecture name and rename the video to it)\n")
 
 	if getChoice(reader) {
-		// TODO - Get Username and Password from the user
+		fmt.Println("--- Enter Username")
 
+		*username = getInput(reader, "--- Please enter an username")
+
+		fmt.Println("--- Enter Password")
+
+		*password = getInput(reader, "--- Please enter a password")
 	}
 
 	fmt.Println("--- Want High Quality Video? (y,N)")
@@ -208,4 +213,22 @@ func getChoice(reader *bufio.Reader) bool {
 	low_choice := strings.ToLower(string(choice))
 
 	return (strings.Compare(low_choice, "y") == 0)
+}
+
+func getInput(reader *bufio.Reader, invalid string) string {
+	input := ""
+
+	for {
+		uname, _, _ := reader.ReadLine()
+
+		input = strings.TrimSpace(string(uname))
+
+		if len(input) <= 0 {
+			fmt.Println(invalid)
+		} else {
+			break
+		}
+	}
+
+	return input
 }
