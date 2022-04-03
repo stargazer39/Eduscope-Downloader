@@ -31,8 +31,15 @@ func main() {
 
 	flag.Parse()
 
+	reader := bufio.NewReader(os.Stdin)
+
+	defer func() {
+		fmt.Println("Press any key to exit.")
+		reader.ReadLine()
+	}()
+
 	if len(*ed_url) <= 0 {
-		InteractiveMode(username, password, ed_url, high_quality)
+		InteractiveMode(username, password, ed_url, high_quality, reader)
 	}
 
 	username_trimmed := strings.TrimSpace(*username)
@@ -142,9 +149,7 @@ func main() {
 	}
 }
 
-func InteractiveMode(username *string, password *string, ed_url *string, high_quality *bool) {
-	reader := bufio.NewReader(os.Stdin)
-
+func InteractiveMode(username *string, password *string, ed_url *string, high_quality *bool, reader *bufio.Reader) {
 	fmt.Print("~~~~~~~~~ Welcome to Dehemi's Eduscope Downloader ~~~~~~~~~\n\n")
 	fmt.Println("--- Enter an Eduscope URL")
 
