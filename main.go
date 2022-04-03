@@ -3,18 +3,15 @@ package main
 import (
 	"bufio"
 	"flag"
-	"io"
+	"fmt"
 	"log"
-	"net/http"
 	"net/url"
 	"os"
-	"os/exec"
 	"path"
 	"strings"
 
 	"github.com/PuerkitoBio/goquery"
 	"github.com/kennygrant/sanitize"
-	"github.com/pieterclaerhout/go-waitgroup"
 )
 
 type WebServicesResponse struct {
@@ -35,8 +32,7 @@ func main() {
 	flag.Parse()
 
 	if len(*ed_url) <= 0 {
-		log.Println("URL is empty")
-		return
+		InteractiveMode(username, password, ed_url, high_quality)
 	}
 
 	username_trimmed := strings.TrimSpace(*username)
@@ -106,8 +102,6 @@ func main() {
 		videoName = sanitize.Path(title)
 	}
 
-	log.Println(videoName)
-
 	var res WebServicesResponse
 
 	query := url.Values{}
@@ -130,7 +124,9 @@ func main() {
 	if *high_quality {
 		if len(res.Video_1_720_m3u8) <= 0 {
 			log.Println("High quality is not available")
+			return
 		}
+		log.Println("Selected High Quality video")
 
 		ur.Path = path.Join(u.Path, res.Video_1_720_m3u8)
 		videoName += "-high-quality"
@@ -138,133 +134,61 @@ func main() {
 		ur.Path = path.Join(u.Path, res.Video_1_360_m3u8)
 	}
 
-	log.Println(ur.String())
+	log.Printf("M3U8 Playlist URL : %s", ur.String())
+	log.Println("Starting Download...")
 
 	if err := DownloadWithHttp(client.Client, ur.String(), videoName); err != nil {
 		log.Panicln(err)
 	}
 }
 
-func DownloadWithFFMPEG(url string, name string) error {
-	cmd := exec.Command("ffmpeg", "-y", "-i", url, "-c", "copy", name+".mkv")
+func InteractiveMode(username *string, password *string, ed_url *string, high_quality *bool) {
+	reader := bufio.NewReader(os.Stdin)
 
-	if err := cmd.Start(); err != nil {
-		return err
-	}
-
-	if err := cmd.Wait(); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func DownloadWithHttp(client *http.Client, u string, name string) error {
-	resp, err := client.Get(u)
-
-	if err != nil {
-		return err
-	}
-
-	reader := bufio.NewReader(resp.Body)
-	var files []string
+	fmt.Print("~~~~~~~~~ Welcome to Dehemi's Eduscope Downloader ~~~~~~~~~\n\n")
+	fmt.Println("--- Enter an Eduscope URL")
 
 	for {
-		line, _, err := reader.ReadLine()
+		u, _, _ := reader.ReadLine()
 
-		if err == io.EOF {
-			break
+		parsed, err := url.Parse(string(u))
+
+		if err != nil {
+			goto wrongurl
 		}
 
-		if strings.HasSuffix(string(line), ".ts") {
-			files = append(files, string(line))
+		if strings.Compare(parsed.Host, "lecturecapture.sliit.lk") != 0 {
+			goto wrongurl
 		}
-	}
 
-	if _, err := os.Stat(name); os.IsNotExist(err) {
-		if err := os.Mkdir(name, 0644); err != nil {
-			return err
+		if len(parsed.Query().Get("id")) <= 0 {
+			goto wrongurl
 		}
+
+		*ed_url = string(u)
+
+		break
+	wrongurl:
+		fmt.Println("--- Invalid URL, Enter a correct one")
 	}
 
-	m3u8_path := path.Join(name, "out.m3u8")
+	fmt.Print("\n--- Use username and password? (y,N)\n--- (That way it will fetch the acctual lecture name and rename the video to it)\n")
 
-	if err := DownloadURLToPath(client, u, m3u8_path); err != nil {
-		log.Panic(err)
-	}
-
-	wg := waitgroup.NewWaitGroup(16)
-
-	for _, f := range files {
-		wg.BlockAdd()
-
-		go func(fName string) {
-			url, _ := url.Parse(u)
-
-			url.Path = path.Join(url.Path, "../"+fName)
-
-			new_url := url.String()
-			new_fPath := path.Join(name, fName)
-
-			if err := DownloadURLToPath(client, new_url, new_fPath); err != nil {
-				log.Panic(err)
-			}
-			wg.Done()
-		}(f)
+	if getChoice(reader) {
+		// TODO - Get Username and Password from the user
 
 	}
 
-	wg.Wait()
+	fmt.Println("--- Want High Quality Video? (y,N)")
 
-	// Merge all together
-	cmd := exec.Command("ffmpeg", "-y", "-i", m3u8_path, "-c", "copy", name+".mkv")
-
-	if err := cmd.Start(); err != nil {
-		return err
+	if getChoice(reader) {
+		*high_quality = true
 	}
-
-	if err := cmd.Wait(); err != nil {
-		return err
-	}
-
-	if err := os.RemoveAll(name); err != nil {
-		log.Println("unable to remove " + name)
-	}
-
-	return nil
 }
 
-func DownloadURLToPath(client *http.Client, url string, output string) error {
-	file_resp, err := client.Get(url)
+func getChoice(reader *bufio.Reader) bool {
+	choice, _, _ := reader.ReadLine()
+	low_choice := strings.ToLower(string(choice))
 
-	if err != nil {
-		return err
-	}
-
-	defer file_resp.Body.Close()
-
-	stat, err := os.Stat(output)
-
-	if err != nil {
-		// log.Println(err)
-	} else {
-		if stat.Size() == file_resp.ContentLength {
-			log.Println("File already exist, and Size is match so not downloading. \n" + output)
-			return nil
-		}
-	}
-
-	file, err := os.Create(output)
-
-	if err != nil {
-		return err
-	}
-
-	defer file.Close()
-
-	if _, err := io.CopyBuffer(file, file_resp.Body, nil); err != nil {
-		return err
-	}
-
-	return nil
+	return (strings.Compare(low_choice, "y") == 0)
 }
