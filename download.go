@@ -69,7 +69,7 @@ func DownloadWithHttp(client *http.Client, u string, name string) error {
 		return err
 	}
 
-	wg := waitgroup.NewWaitGroup(16)
+	wg := waitgroup.NewWaitGroup(8)
 	progress := make(chan int)
 	count := 0
 	total := len(files)
