@@ -12,10 +12,14 @@
 
 ```
 Usage of Eduscope Downloader:
+  -ff string
+        Custom FFMPEG arguments (default "-c copy")
   -high-quality
-        Downloads video at a higher quality
+        Downloads video at a higher quality    
   -p string
         Eduscope Password
+  -t int
+        Set Thread Count for the HTTP client (default 8)
   -u string
         Eduscope User Name
   -url string
