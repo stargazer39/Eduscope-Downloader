@@ -201,7 +201,7 @@ func InteractiveMode(username *string, password *string, ed_url *string, high_qu
 	for {
 		u, _, _ := reader.ReadLine()
 
-		parsed, err := url.Parse(string(u))
+		parsed, err := url.Parse(strings.TrimSpace(string(u)))
 
 		if err != nil {
 			goto wrongurl
