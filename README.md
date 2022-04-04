@@ -4,7 +4,9 @@
 ## How to download a video
 
 1. Go to releases and download the latest
-2. Run eduscope-downloader
+2. Unpack the 7z archive
+3. Run eduscope-downloader
+4. Follow the on-screen instructions
 
 ## If the download fails, you can download again and it will resume where it left off
 
