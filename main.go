@@ -199,9 +199,9 @@ func InteractiveMode(username *string, password *string, ed_url *string, high_qu
 	fmt.Println("--- Enter an Eduscope URL")
 
 	for {
-		u, _, _ := reader.ReadLine()
+		u := getInput(reader, "--- Enter an Eduscope URL", true)
 
-		parsed, err := url.Parse(strings.TrimSpace(string(u)))
+		parsed, err := url.Parse(u)
 
 		if err != nil {
 			goto wrongurl
@@ -227,11 +227,11 @@ func InteractiveMode(username *string, password *string, ed_url *string, high_qu
 	if getChoice(reader) {
 		fmt.Println("--- Enter Username")
 
-		*username = getInput(reader, "--- Please enter an username")
+		*username = getInput(reader, "--- Please enter an username", true)
 
 		fmt.Println("--- Enter Password")
 
-		*password = getInput(reader, "--- Please enter a password")
+		*password = getInput(reader, "--- Please enter a password", false)
 	}
 
 	fmt.Println("--- Want High Quality Video? (y,N)")
@@ -248,13 +248,17 @@ func getChoice(reader *bufio.Reader) bool {
 	return (strings.Compare(low_choice, "y") == 0)
 }
 
-func getInput(reader *bufio.Reader, invalid string) string {
+func getInput(reader *bufio.Reader, invalid string, trim bool) string {
 	input := ""
 
 	for {
-		uname, _, _ := reader.ReadLine()
+		input_bytes, _, _ := reader.ReadLine()
 
-		input = strings.TrimSpace(string(uname))
+		if trim {
+			input = strings.TrimSpace(string(input_bytes))
+		} else {
+			input = string(input_bytes)
+		}
 
 		if len(input) <= 0 {
 			fmt.Println(invalid)
