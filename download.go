@@ -29,11 +29,11 @@ func DownloadWithFFMPEG(url string, name string) error {
 	return nil
 }
 
-func DownloadWithHttp(client *http.Client, u string, name string) error {
+func DownloadWithHttp(client *http.Client, u string, name string, threads int) (error, string) {
 	resp, err := client.Get(u)
 
 	if err != nil {
-		return err
+		return err, ""
 	}
 
 	reader := bufio.NewReader(resp.Body)
@@ -47,29 +47,31 @@ func DownloadWithHttp(client *http.Client, u string, name string) error {
 			case io.EOF:
 				break
 			default:
-				return err
+				return err, ""
 			}
 			break
 		}
 
-		if strings.HasSuffix(string(line), ".ts") {
-			files = append(files, string(line))
+		segment := string(line)
+
+		if strings.HasSuffix(segment, ".ts") {
+			files = append(files, segment)
 		}
 	}
 
 	if _, err := os.Stat(name); os.IsNotExist(err) {
 		if err := os.Mkdir(name, 0644); err != nil {
-			return err
+			return err, ""
 		}
 	}
 
 	m3u8_path := path.Join(name, "out.m3u8")
 
 	if err := DownloadURLToPath(client, u, m3u8_path); err != nil {
-		return err
+		return err, ""
 	}
 
-	wg := waitgroup.NewWaitGroup(8)
+	wg := waitgroup.NewWaitGroup(threads)
 	progress := make(chan int)
 	count := 0
 	total := len(files)
@@ -110,24 +112,7 @@ func DownloadWithHttp(client *http.Client, u string, name string) error {
 
 	wg.Wait()
 
-	log.Println("Merging all parts together using FFMPEG")
-	// Merge all together
-	cmd := exec.Command("ffmpeg", "-y", "-i", m3u8_path, "-c", "copy", name+".mkv")
-
-	if err := cmd.Start(); err != nil {
-		return err
-	}
-
-	if err := cmd.Wait(); err != nil {
-		return err
-	}
-
-	if err := os.RemoveAll(name); err != nil {
-		log.Println("unable to remove " + name)
-	}
-
-	log.Printf("%s download complete. Byeee", name)
-	return nil
+	return nil, m3u8_path
 }
 
 func DownloadURLToPath(client *http.Client, url string, output string) error {

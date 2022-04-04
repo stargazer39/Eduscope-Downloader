@@ -29,14 +29,16 @@ func main() {
 	username := flag.String("u", "", "Eduscope User Name")
 	password := flag.String("p", "", "Eduscope Password")
 	high_quality := flag.Bool("high-quality", false, "Downloads video at a higher quality")
+	threads := flag.Int("t", 8, "Set Thread Count for the HTTP client")
+	custom_ffmpeg := flag.String("ff", "-c copy", "Custom FFMPEG arguments")
 
 	flag.Parse()
 
 	reader := bufio.NewReader(os.Stdin)
 
 	defer func() {
-		fmt.Println("Press any key to exit.")
-		reader.ReadRune()
+		fmt.Println("Press Enter key to exit.")
+		reader.ReadByte()
 	}()
 
 	// Check for ffmpeg
@@ -162,10 +164,34 @@ func main() {
 	log.Printf("M3U8 Playlist URL : %s", ur.String())
 	log.Println("Starting Download...")
 
-	if err := DownloadWithHttp(client.Client, ur.String(), videoName); err != nil {
+	dErr, m3u8_file := DownloadWithHttp(client.Client, ur.String(), videoName, *threads)
+
+	if dErr != nil {
 		log.Println(err)
 		return
 	}
+
+	before := []string{"-y", "-i", m3u8_file}
+	mid := strings.Split(*custom_ffmpeg, " ")
+	after := []string{videoName + ".mkv"}
+
+	args := append(before, mid...)
+	args = append(args, after...)
+
+	log.Println("Merging all parts together using FFMPEG")
+	log.Printf("Using Arguments %v", args)
+
+	if err := FFMPEG(args...); err != nil {
+		log.Println(err)
+		return
+	}
+
+	if err := os.RemoveAll(videoName); err != nil {
+		log.Println("Unable to remove " + videoName)
+	}
+
+	log.Printf("Video %s download complete. Byeee", videoName)
+
 }
 
 func InteractiveMode(username *string, password *string, ed_url *string, high_quality *bool, reader *bufio.Reader) {
@@ -238,4 +264,18 @@ func getInput(reader *bufio.Reader, invalid string) string {
 	}
 
 	return input
+}
+
+func FFMPEG(args ...string) error {
+	cmd := exec.Command("ffmpeg", args...)
+
+	if err := cmd.Start(); err != nil {
+		return err
+	}
+
+	if err := cmd.Wait(); err != nil {
+		return err
+	}
+
+	return nil
 }

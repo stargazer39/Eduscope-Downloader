@@ -8,6 +8,9 @@ require (
 	github.com/go-resty/resty/v2 v2.7.0 // indirect
 	github.com/grafov/m3u8 v0.11.1 // indirect
 	github.com/kennygrant/sanitize v1.2.4 // indirect
+	github.com/mattn/go-isatty v0.0.10 // indirect
+	github.com/mattn/go-tty v0.0.4 // indirect
 	github.com/pieterclaerhout/go-waitgroup v1.0.7 // indirect
 	golang.org/x/net v0.0.0-20211029224645-99673261e6eb // indirect
+	golang.org/x/sys v0.0.0-20210423082822-04245dca01da // indirect
 )
