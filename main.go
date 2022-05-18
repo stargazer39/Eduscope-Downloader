@@ -31,14 +31,20 @@ func main() {
 	high_quality := flag.Bool("high-quality", false, "Downloads video at a higher quality")
 	threads := flag.Int("t", 8, "Set Thread Count for the HTTP client")
 	custom_ffmpeg := flag.String("ff", "-c copy", "Custom FFMPEG arguments")
+	confirm := true
+	keep_temp := flag.Bool("k", false, "Keep temp folder")
 
 	flag.Parse()
 
 	reader := bufio.NewReader(os.Stdin)
 
 	defer func() {
-		fmt.Println("Press Enter key to exit.")
-		reader.ReadByte()
+
+		if confirm {
+			fmt.Println("Press Enter key to exit.")
+			reader.ReadByte()
+		}
+
 	}()
 
 	// Check for ffmpeg
@@ -54,6 +60,8 @@ func main() {
 
 	if len(*ed_url) <= 0 {
 		InteractiveMode(username, password, ed_url, high_quality, reader)
+	} else {
+		confirm = false
 	}
 
 	username_trimmed := strings.TrimSpace(*username)
@@ -186,8 +194,11 @@ func main() {
 		return
 	}
 
-	if err := os.RemoveAll(videoName); err != nil {
-		log.Println("Unable to remove " + videoName)
+	if !(*keep_temp) {
+		log.Println("Cleaning up the temp files. pass -k to keep them")
+		if err := os.RemoveAll(videoName); err != nil {
+			log.Println("Unable to remove " + videoName)
+		}
 	}
 
 	log.Printf("Video %s download complete. Byeee", videoName)
