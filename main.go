@@ -33,6 +33,7 @@ func main() {
 	custom_ffmpeg := flag.String("ff", "-c copy", "Custom FFMPEG arguments")
 	confirm := true
 	keep_temp := flag.Bool("k", false, "Keep temp folder")
+	format := flag.String("f", "mp4", "Set format of the video. Defaults to mp4")
 
 	flag.Parse()
 
@@ -181,7 +182,7 @@ func main() {
 
 	before := []string{"-y", "-i", m3u8_file}
 	mid := strings.Split(*custom_ffmpeg, " ")
-	after := []string{videoName + ".mkv"}
+	after := []string{videoName + "." + *format}
 
 	args := append(before, mid...)
 	args = append(args, after...)
