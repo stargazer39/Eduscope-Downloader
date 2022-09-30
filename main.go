@@ -167,7 +167,7 @@ func main() {
 	dErr, m3u8_file := DownloadWithHttp(client.Client, ur.String(), videoName, *threads)
 
 	if dErr != nil {
-		log.Println(err)
+		log.Println(dErr, 1)
 		return
 	}
 

@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"crypto/tls"
 	"encoding/json"
 	"io"
 	"net/http"
@@ -16,8 +17,13 @@ type HttpClient struct {
 func NewHttpClient() *HttpClient {
 	jar, _ := cookiejar.New(nil)
 
+	tr := &http.Transport{
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+	}
+
 	client := &http.Client{
-		Jar: jar,
+		Jar:       jar,
+		Transport: tr,
 	}
 
 	return &HttpClient{

@@ -60,7 +60,7 @@ func DownloadWithHttp(client *http.Client, u string, name string, threads int) (
 	}
 
 	if _, err := os.Stat(name); os.IsNotExist(err) {
-		if err := os.Mkdir(name, 0644); err != nil {
+		if err := os.Mkdir(name, 0777); err != nil {
 			return err, ""
 		}
 	}
