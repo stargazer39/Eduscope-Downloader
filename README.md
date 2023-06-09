@@ -33,7 +33,7 @@ Usage of Eduscope Downloader:
 .\eduscope-downloader-win.exe --high-quality -p 123 -u it20603618@my.sliit.lk -url https://lecturecapture.sliit.lk/neplayer.php?id=anBzV3hiYXdXV181NzU5OA== -t 8
 ```
 
-# If you are getting this error, put ffmpeg in your PATH. 
+## If you are getting below error, put ffmpeg in your PATH. 
 ```
 cannot run executable found relative to current directory
 ```
